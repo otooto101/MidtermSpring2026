@@ -115,22 +115,7 @@ public class Main {
             }
 
             if (chosen == -1) {
-                String drawn = draw();
-                hand.add(drawn);
-                if (!quiet) {
-                    System.out.println(name + " draws " + drawn);
-                }
-                if (isLegal(drawn, upCard, calledColor)) {
-                    if (!humanPlayers.get(currentPlayer).booleanValue()) {
-                        chosen = hand.size() - 1;
-                    } else {
-                        System.out.print("Play drawn card " + drawn + "? y/n: ");
-                        String answer = scanner.nextLine();
-                        if (answer.equalsIgnoreCase("y") || answer.equalsIgnoreCase("yes")) {
-                            chosen = hand.size() - 1;
-                        }
-                    }
-                }
+                chosen = handleDraw(hand, name);
             }
 
             if (chosen >= 0) {
@@ -207,6 +192,28 @@ public class Main {
         if (!quiet) {
             System.out.println("Game stopped at safety limit.");
         }
+    }
+
+    // draws a card for the current player and returns the index to play it,
+    // or -1 if the drawn card isn't legal (or human chose not to play it)
+    static int handleDraw(ArrayList<String> hand, String name) {
+        String drawn = draw();
+        hand.add(drawn);
+        if (!quiet) {
+            System.out.println(name + " draws " + drawn);
+        }
+        if (isLegal(drawn, upCard, calledColor)) {
+            if (!humanPlayers.get(currentPlayer).booleanValue()) {
+                return hand.size() - 1;
+            } else {
+                System.out.print("Play drawn card " + drawn + "? y/n: ");
+                String answer = scanner.nextLine();
+                if (answer.equalsIgnoreCase("y") || answer.equalsIgnoreCase("yes")) {
+                    return hand.size() - 1;
+                }
+            }
+        }
+        return -1;
     }
 
     static void dealHands() {
