@@ -6,7 +6,6 @@ import java.util.Scanner;
 public class Main {
     static GameState state = new GameState();
     static boolean quiet = false;
-    static Random random = new Random();
     static Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
@@ -35,7 +34,7 @@ public class Main {
             }
         }
 
-        random = new Random(seed);
+        state.random = new Random(seed);
         setupPlayers(bots, human);
 
         if (state.playerNames.size() < 2 || state.playerNames.size() > 4) {
@@ -69,7 +68,7 @@ public class Main {
 
     static void playGame() {
         buildDeck();
-        Collections.shuffle(state.deck, random);
+        Collections.shuffle(state.deck, state.random);
         state.discard.clear();
         dealHands();
         state.upCard = draw();
@@ -79,7 +78,7 @@ public class Main {
         }
         state.calledColor = "";
         state.direction = 1;
-        state.currentPlayer = random.nextInt(state.playerNames.size());
+        state.currentPlayer = state.random.nextInt(state.playerNames.size());
 
         int guard = 0;
         while (guard < 3000) {
@@ -206,7 +205,7 @@ public class Main {
         if (state.deck.size() == 0) {
             state.deck.addAll(state.discard);
             state.discard.clear();
-            Collections.shuffle(state.deck, random);
+            Collections.shuffle(state.deck, state.random);
         }
         if (state.deck.size() == 0) {
             return "W";
