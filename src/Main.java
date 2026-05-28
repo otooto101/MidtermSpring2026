@@ -220,18 +220,7 @@ public class Main {
                 }
 
                 if (hand.size() == 0) {
-                    int points = 0;
-                    for (int i = 0; i < hands.size(); i++) {
-                        if (i != currentPlayer) {
-                            for (int j = 0; j < hands.get(i).size(); j++) {
-                                points += points(hands.get(i).get(j));
-                            }
-                        }
-                    }
-                    scores[currentPlayer] += points;
-                    if (!quiet) {
-                        System.out.println(name + " wins and scores " + points);
-                    }
+                    scoreRound(name);
                     return;
                 }
 
@@ -257,8 +246,22 @@ public class Main {
         return deck.remove(0);
     }
 
-    static void applyCardEffect(String card) {
-        if (rank(card).equals("SKIP")) {
+    static void scoreRound(String winnerName) {
+        int points = 0;
+        for (int i = 0; i < hands.size(); i++) {
+            if (i != currentPlayer) {
+                for (int j = 0; j < hands.get(i).size(); j++) {
+                    points += points(hands.get(i).get(j));
+                }
+            }
+        }
+        scores[currentPlayer] += points;
+        if (!quiet) {
+            System.out.println(winnerName + " wins and scores " + points);
+        }
+    }
+
+    static void applyCardEffect(String card) {        if (rank(card).equals("SKIP")) {
             next();
             next();
         } else if (rank(card).equals("REVERSE")) {
