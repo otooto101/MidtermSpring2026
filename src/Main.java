@@ -86,14 +86,7 @@ public class Main {
         buildDeck();
         Collections.shuffle(deck, random);
         discard.clear();
-        for (int i = 0; i < hands.size(); i++) {
-            hands.get(i).clear();
-        }
-        for (int i = 0; i < playerNames.size(); i++) {
-            for (int j = 0; j < 7; j++) {
-                hands.get(i).add(draw());
-            }
-        }
+        dealHands();
         upCard = draw();
         while (upCard.startsWith("W")) {
             discard.add(upCard);
@@ -213,6 +206,17 @@ public class Main {
         }
         if (!quiet) {
             System.out.println("Game stopped at safety limit.");
+        }
+    }
+
+    static void dealHands() {
+        for (int i = 0; i < hands.size(); i++) {
+            hands.get(i).clear();
+        }
+        for (int i = 0; i < playerNames.size(); i++) {
+            for (int j = 0; j < 7; j++) {
+                hands.get(i).add(draw());
+            }
         }
     }
 
