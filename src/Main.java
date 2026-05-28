@@ -218,32 +218,38 @@ public class Main {
     }
 
     static void applyCardEffect(String card) {
-        if (rank(card).equals("SKIP")) {
-            next();
-            next();
-        } else if (rank(card).equals("REVERSE")) {
-            state.direction = state.direction * -1;
-            if (state.players.size() == 2) {
+        switch (rank(card)) {
+            case "SKIP":
                 next();
                 next();
-            } else {
+                break;
+            case "REVERSE":
+                state.direction = state.direction * -1;
+                if (state.players.size() == 2) {
+                    next();
+                    next();
+                } else {
+                    next();
+                }
+                break;
+            case "DRAW_TWO":
                 next();
-            }
-        } else if (rank(card).equals("DRAW_TWO")) {
-            next();
-            state.players.get(state.currentPlayer).hand.add(draw());
-            state.players.get(state.currentPlayer).hand.add(draw());
-            Display.drawsTwo(state.players.get(state.currentPlayer).name);
-            next();
-        } else if (rank(card).equals("WILD_DRAW_FOUR")) {
-            next();
-            for (int i = 0; i < 4; i++) {
                 state.players.get(state.currentPlayer).hand.add(draw());
-            }
-            Display.drawsFour(state.players.get(state.currentPlayer).name);
-            next();
-        } else {
-            next();
+                state.players.get(state.currentPlayer).hand.add(draw());
+                Display.drawsTwo(state.players.get(state.currentPlayer).name);
+                next();
+                break;
+            case "WILD_DRAW_FOUR":
+                next();
+                for (int i = 0; i < 4; i++) {
+                    state.players.get(state.currentPlayer).hand.add(draw());
+                }
+                Display.drawsFour(state.players.get(state.currentPlayer).name);
+                next();
+                break;
+            default:
+                next();
+                break;
         }
     }
 
