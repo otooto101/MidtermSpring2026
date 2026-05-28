@@ -283,9 +283,9 @@ public class CharacterizationTest {
     static void testSkipEffect() {
         GameState saved = Main.state;
         Main.state = new GameState();
-        Main.state.playerNames.add("A");
-        Main.state.playerNames.add("B");
-        Main.state.playerNames.add("C");
+        Main.state.players.add(new Player("A", false));
+        Main.state.players.add(new Player("B", false));
+        Main.state.players.add(new Player("C", false));
         Main.state.currentPlayer = 0;
         Main.state.direction = 1;
         Main.next();
@@ -298,9 +298,9 @@ public class CharacterizationTest {
     static void testReverseEffect() {
         GameState saved = Main.state;
         Main.state = new GameState();
-        Main.state.playerNames.add("A");
-        Main.state.playerNames.add("B");
-        Main.state.playerNames.add("C");
+        Main.state.players.add(new Player("A", false));
+        Main.state.players.add(new Player("B", false));
+        Main.state.players.add(new Player("C", false));
         Main.state.currentPlayer = 1;
         Main.state.direction = 1;
         Main.state.direction = Main.state.direction * -1;
@@ -314,25 +314,23 @@ public class CharacterizationTest {
     static void testDrawTwoEffect() {
         GameState saved = Main.state;
         Main.state = new GameState();
-        Main.state.playerNames.add("A");
-        Main.state.playerNames.add("B");
+        Main.state.players.add(new Player("A", false));
+        Main.state.players.add(new Player("B", false));
         Main.state.direction = 1;
         Main.state.currentPlayer = 0;
-        Main.state.hands.add(new ArrayList<>());
-        Main.state.hands.add(new ArrayList<>());
         Main.state.deck.add("R1");
         Main.state.deck.add("G3");
         Main.state.deck.add("B5");
 
-        int before = Main.state.hands.get(1).size();
+        int before = Main.state.players.get(1).hand.size();
 
         // mirrors exactly what the game loop does for DRAW_TWO
         Main.next();
-        Main.state.hands.get(Main.state.currentPlayer).add(Main.draw());
-        Main.state.hands.get(Main.state.currentPlayer).add(Main.draw());
+        Main.state.players.get(Main.state.currentPlayer).hand.add(Main.draw());
+        Main.state.players.get(Main.state.currentPlayer).hand.add(Main.draw());
         Main.next();
 
-        check("draw two: player 1 got 2 cards", Main.state.hands.get(1).size() == before + 2);
+        check("draw two: player 1 got 2 cards", Main.state.players.get(1).hand.size() == before + 2);
         check("draw two: ends back at player 0 (B's turn skipped)", Main.state.currentPlayer == 0);
         Main.state = saved;
     }

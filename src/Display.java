@@ -56,10 +56,10 @@ public class Display {
         if (!Main.quiet) System.out.println("Game stopped at safety limit.");
     }
 
-    static void finalScores(ArrayList<String> playerNames, int[] scores) {
+    static void finalScores(ArrayList<Player> players, int[] scores) {
         System.out.println("\nFinal scores:");
-        for (int i = 0; i < playerNames.size(); i++) {
-            System.out.println(playerNames.get(i) + ": " + scores[i]);
+        for (int i = 0; i < players.size(); i++) {
+            System.out.println(players.get(i).name + ": " + scores[i]);
         }
     }
 }
