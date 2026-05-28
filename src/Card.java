@@ -1,6 +1,4 @@
-// Value object for a single UNO card.
-// All card knowledge (color, rank, legality) lives here instead of scattered
-// across Main as static string-parsing methods.
+// one card - moved all the color/rank/point stuff here so Main isn't a mess
 public class Card {
 
     private final String code;

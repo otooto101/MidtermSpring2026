@@ -1,8 +1,6 @@
 import java.util.ArrayList;
 
-// Handles all terminal output for the game.
-// Keeping this separate from game logic means the view can change
-// without touching the rules, and rules can be tested without console noise.
+// all the print statements live here so the game logic isn't cluttered with sysouts
 public class Display {
 
     static void gameStart(int gameNumber) {

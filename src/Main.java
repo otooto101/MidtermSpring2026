@@ -336,7 +336,7 @@ public class Main {
         return "B";
     }
 
-    // these delegate to Card so the logic lives in one place
+    // quick helpers so i don't have to write new Card(...) everywhere
     static boolean isLegal(String card, String up, String call) { return new Card(card).isLegalOn(up, call); }
     static String color(String card)  { return new Card(card).color(); }
     static String rank(String card)   { return new Card(card).rank(); }

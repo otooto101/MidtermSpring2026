@@ -1,7 +1,6 @@
 import java.util.ArrayList;
 
-// bundles name, type, and hand for one player
-// replaces the three parallel arrays (playerNames, humanPlayers, hands)
+// holds everything about one player: name, human or bot, and their cards
 class Player {
     String name;
     boolean isHuman;
