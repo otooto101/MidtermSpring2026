@@ -148,43 +148,58 @@ public class CharacterizationTest {
 
     // bot prefers DRAW_TWO > SKIP > NUMBER > WILD (hardcoded priority passes)
     static void testBotPrefersDraw2() {
+        GameState saved = Main.state;
+        Main.state = new GameState();
+        Main.state.upCard = "R9";
+        Main.state.calledColor = "";
         ArrayList<String> hand = hand("R5", "R+2", "RS", "W");
-        Main.upCard = "R9";
-        Main.calledColor = "";
         int idx = Main.chooseBotCard(hand);
         check("bot picks R+2 (DRAW_TWO) first", hand.get(idx).equals("R+2"));
+        Main.state = saved;
     }
 
     static void testBotPrefersSkip() {
+        GameState saved = Main.state;
+        Main.state = new GameState();
+        Main.state.upCard = "R9";
+        Main.state.calledColor = "";
         ArrayList<String> hand = hand("R5", "RS", "W");
-        Main.upCard = "R9";
-        Main.calledColor = "";
         int idx = Main.chooseBotCard(hand);
         check("bot picks RS (SKIP) before R5 or W", hand.get(idx).equals("RS"));
+        Main.state = saved;
     }
 
     static void testBotPrefersNumberBeforeWild() {
+        GameState saved = Main.state;
+        Main.state = new GameState();
+        Main.state.upCard = "R9";
+        Main.state.calledColor = "";
         ArrayList<String> hand = hand("B3", "R5", "W");
-        Main.upCard = "R9";
-        Main.calledColor = "";
         int idx = Main.chooseBotCard(hand);
         check("bot picks R5 (NUMBER) before W", hand.get(idx).equals("R5"));
+        Main.state = saved;
     }
 
     static void testBotPlayWildWhenOnly() {
+        GameState saved = Main.state;
+        Main.state = new GameState();
+        Main.state.upCard = "R9";
+        Main.state.calledColor = "";
         ArrayList<String> hand = hand("B3", "G2", "W");
-        Main.upCard = "R9";
-        Main.calledColor = "";
         int idx = Main.chooseBotCard(hand);
         check("bot plays W when it's the only legal card", hand.get(idx).equals("W"));
+        Main.state = saved;
     }
 
     static void testBotReturnsMinusOne() {
+        GameState saved = Main.state;
+        Main.state = new GameState();
+        Main.state.upCard = "R9";
+        Main.state.calledColor = "";
         ArrayList<String> hand = hand("B3", "G2", "YS");
-        Main.upCard = "R9";
-        Main.calledColor = "";
         int idx = Main.chooseBotCard(hand);
         check("bot returns -1 when no legal card", idx == -1);
+        Main.state = saved;
     }
 
     static void testBotColorMajority() {
@@ -241,117 +256,85 @@ public class CharacterizationTest {
 
     // reverse flips direction; on 2 players next() is called twice so it skips like a skip
     static void testReverse2Player() {
-        Main.direction = 1;
-        Main.direction = Main.direction * -1;
-        check("direction flips from 1 to -1", Main.direction == -1);
-        Main.direction = Main.direction * -1;
-        check("direction flips back to 1",    Main.direction == 1);
+        GameState saved = Main.state;
+        Main.state = new GameState();
+        Main.state.direction = 1;
+        Main.state.direction = Main.state.direction * -1;
+        check("direction flips from 1 to -1", Main.state.direction == -1);
+        Main.state.direction = Main.state.direction * -1;
+        check("direction flips back to 1", Main.state.direction == 1);
+        Main.state = saved;
     }
 
     // when the deck runs out, discard gets reshuffled back in
     static void testDeckRecycle() {
-        ArrayList<String> savedDeck    = Main.deck;
-        ArrayList<String> savedDiscard = Main.discard;
-
-        Main.deck    = new ArrayList<>();
-        Main.discard = new ArrayList<>();
-        Main.discard.add("R5");
-        Main.discard.add("G3");
+        GameState saved = Main.state;
+        Main.state = new GameState();
+        Main.state.discard.add("R5");
+        Main.state.discard.add("G3");
 
         String drawn = Main.draw();
         check("can draw from recycled discard", drawn != null && !drawn.isEmpty());
-        check("discard is cleared after recycle", Main.discard.size() == 0);
-
-        Main.deck    = savedDeck;
-        Main.discard = savedDiscard;
+        check("discard is cleared after recycle", Main.state.discard.size() == 0);
+        Main.state = saved;
     }
 
     // skip calls next() twice so player 1 gets completely skipped
     static void testSkipEffect() {
-        int savedPlayer    = Main.currentPlayer;
-        int savedDirection = Main.direction;
-        ArrayList<String> savedNames = Main.playerNames;
-
-        Main.playerNames = new ArrayList<>();
-        Main.playerNames.add("A");
-        Main.playerNames.add("B");
-        Main.playerNames.add("C");
-        Main.currentPlayer = 0;
-        Main.direction = 1;
-
+        GameState saved = Main.state;
+        Main.state = new GameState();
+        Main.state.playerNames.add("A");
+        Main.state.playerNames.add("B");
+        Main.state.playerNames.add("C");
+        Main.state.currentPlayer = 0;
+        Main.state.direction = 1;
         Main.next();
         Main.next();
-
-        check("skip: player 0 plays, player 1 skipped, lands on 2", Main.currentPlayer == 2);
-
-        Main.currentPlayer = savedPlayer;
-        Main.direction     = savedDirection;
-        Main.playerNames   = savedNames;
+        check("skip: player 0 plays, player 1 skipped, lands on 2", Main.state.currentPlayer == 2);
+        Main.state = saved;
     }
 
     // reverse flips direction; with 3 players moving backwards from 1 lands on 0
     static void testReverseEffect() {
-        int savedPlayer    = Main.currentPlayer;
-        int savedDirection = Main.direction;
-        ArrayList<String> savedNames = Main.playerNames;
-
-        Main.playerNames = new ArrayList<>();
-        Main.playerNames.add("A");
-        Main.playerNames.add("B");
-        Main.playerNames.add("C");
-        Main.currentPlayer = 1;
-        Main.direction = 1;
-
-        Main.direction = Main.direction * -1;
+        GameState saved = Main.state;
+        Main.state = new GameState();
+        Main.state.playerNames.add("A");
+        Main.state.playerNames.add("B");
+        Main.state.playerNames.add("C");
+        Main.state.currentPlayer = 1;
+        Main.state.direction = 1;
+        Main.state.direction = Main.state.direction * -1;
         Main.next();
-
-        check("reverse: direction is now -1", Main.direction == -1);
-        check("reverse: next player is 0 (moved backwards from 1)", Main.currentPlayer == 0);
-
-        Main.currentPlayer = savedPlayer;
-        Main.direction     = savedDirection;
-        Main.playerNames   = savedNames;
+        check("reverse: direction is now -1", Main.state.direction == -1);
+        check("reverse: next player is 0 (moved backwards from 1)", Main.state.currentPlayer == 0);
+        Main.state = saved;
     }
 
     // draw two: next player gets 2 extra cards and their turn is skipped
     static void testDrawTwoEffect() {
-        int savedPlayer    = Main.currentPlayer;
-        int savedDirection = Main.direction;
-        ArrayList<String> savedNames = Main.playerNames;
-        ArrayList<ArrayList<String>> savedHands = Main.hands;
-        ArrayList<String> savedDeck = Main.deck;
+        GameState saved = Main.state;
+        Main.state = new GameState();
+        Main.state.playerNames.add("A");
+        Main.state.playerNames.add("B");
+        Main.state.direction = 1;
+        Main.state.currentPlayer = 0;
+        Main.state.hands.add(new ArrayList<>());
+        Main.state.hands.add(new ArrayList<>());
+        Main.state.deck.add("R1");
+        Main.state.deck.add("G3");
+        Main.state.deck.add("B5");
 
-        Main.playerNames = new ArrayList<>();
-        Main.playerNames.add("A");
-        Main.playerNames.add("B");
-        Main.direction = 1;
-        Main.currentPlayer = 0;
-
-        Main.hands = new ArrayList<>();
-        Main.hands.add(new ArrayList<>());
-        Main.hands.add(new ArrayList<>());
-
-        Main.deck = new ArrayList<>();
-        Main.deck.add("R1");
-        Main.deck.add("G3");
-        Main.deck.add("B5");
-
-        int before = Main.hands.get(1).size();
+        int before = Main.state.hands.get(1).size();
 
         // mirrors exactly what the game loop does for DRAW_TWO
         Main.next();
-        Main.hands.get(Main.currentPlayer).add(Main.draw());
-        Main.hands.get(Main.currentPlayer).add(Main.draw());
+        Main.state.hands.get(Main.state.currentPlayer).add(Main.draw());
+        Main.state.hands.get(Main.state.currentPlayer).add(Main.draw());
         Main.next();
 
-        check("draw two: player 1 got 2 cards", Main.hands.get(1).size() == before + 2);
-        check("draw two: ends back at player 0 (B's turn skipped)", Main.currentPlayer == 0);
-
-        Main.currentPlayer = savedPlayer;
-        Main.direction     = savedDirection;
-        Main.playerNames   = savedNames;
-        Main.hands         = savedHands;
-        Main.deck          = savedDeck;
+        check("draw two: player 1 got 2 cards", Main.state.hands.get(1).size() == before + 2);
+        check("draw two: ends back at player 0 (B's turn skipped)", Main.state.currentPlayer == 0);
+        Main.state = saved;
     }
 
     static ArrayList<String> hand(String... cards) {

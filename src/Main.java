@@ -1,20 +1,10 @@
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
 
 public class Main {
-    static ArrayList<String> playerNames = new ArrayList<String>();
-    static ArrayList<Boolean> humanPlayers = new ArrayList<Boolean>();
-    static ArrayList<ArrayList<String>> hands = new ArrayList<ArrayList<String>>();
-    static ArrayList<String> deck = new ArrayList<String>();
-    static ArrayList<String> discard = new ArrayList<String>();
-    static int[] scores = new int[10];
-    static int currentPlayer = 0;
-    static int direction = 1;
-    static String upCard = "";
-    static String calledColor = "";
+    static GameState state = new GameState();
     static boolean quiet = false;
     static Random random = new Random();
     static Scanner scanner = new Scanner(System.in);
@@ -48,7 +38,7 @@ public class Main {
         random = new Random(seed);
         setupPlayers(bots, human);
 
-        if (playerNames.size() < 2 || playerNames.size() > 4) {
+        if (state.playerNames.size() < 2 || state.playerNames.size() > 4) {
             System.out.println("UNO needs 2 to 4 players.");
             return;
         }
@@ -58,49 +48,49 @@ public class Main {
             playGame();
         }
 
-        Display.finalScores(playerNames, scores);
+        Display.finalScores(state.playerNames, state.scores);
     }
 
     static void setupPlayers(int bots, boolean human) {
-        playerNames.clear();
-        humanPlayers.clear();
-        hands.clear();
+        state.playerNames.clear();
+        state.humanPlayers.clear();
+        state.hands.clear();
         if (human) {
-            playerNames.add("You");
-            humanPlayers.add(Boolean.TRUE);
-            hands.add(new ArrayList<String>());
+            state.playerNames.add("You");
+            state.humanPlayers.add(Boolean.TRUE);
+            state.hands.add(new ArrayList<>());
         }
         for (int i = 1; i <= bots; i++) {
-            playerNames.add("Bot" + i);
-            humanPlayers.add(Boolean.FALSE);
-            hands.add(new ArrayList<String>());
+            state.playerNames.add("Bot" + i);
+            state.humanPlayers.add(Boolean.FALSE);
+            state.hands.add(new ArrayList<>());
         }
     }
 
     static void playGame() {
         buildDeck();
-        Collections.shuffle(deck, random);
-        discard.clear();
+        Collections.shuffle(state.deck, random);
+        state.discard.clear();
         dealHands();
-        upCard = draw();
-        while (upCard.startsWith("W")) {
-            discard.add(upCard);
-            upCard = draw();
+        state.upCard = draw();
+        while (state.upCard.startsWith("W")) {
+            state.discard.add(state.upCard);
+            state.upCard = draw();
         }
-        calledColor = "";
-        direction = 1;
-        currentPlayer = random.nextInt(playerNames.size());
+        state.calledColor = "";
+        state.direction = 1;
+        state.currentPlayer = random.nextInt(state.playerNames.size());
 
         int guard = 0;
         while (guard < 3000) {
             guard++;
-            String name = playerNames.get(currentPlayer);
-            ArrayList<String> hand = hands.get(currentPlayer);
+            String name = state.playerNames.get(state.currentPlayer);
+            ArrayList<String> hand = state.hands.get(state.currentPlayer);
 
-            Display.turnState(upCard, calledColor, name, hand);
+            Display.turnState(state.upCard, state.calledColor, name, hand);
 
             int chosen = -1;
-            if (humanPlayers.get(currentPlayer).booleanValue()) {
+            if (state.humanPlayers.get(state.currentPlayer).booleanValue()) {
                 chosen = askHuman(hand);
             } else {
                 chosen = chooseBotCard(hand);
@@ -120,7 +110,7 @@ public class Main {
 
                 String card = hand.get(chosen);
 
-                if (!isLegal(card, upCard, calledColor)) {
+                if (!isLegal(card, state.upCard, state.calledColor)) {
                     Display.illegalCard(name, card);
                     hand.add(draw());
                     next();
@@ -128,18 +118,18 @@ public class Main {
                 }
 
                 hand.remove(chosen);
-                discard.add(upCard);
-                upCard = card;
-                calledColor = "";
+                state.discard.add(state.upCard);
+                state.upCard = card;
+                state.calledColor = "";
                 Display.playerPlays(name, card);
 
                 if (card.equals("W") || card.equals("W4")) {
-                    if (humanPlayers.get(currentPlayer).booleanValue()) {
-                        calledColor = askColor();
+                    if (state.humanPlayers.get(state.currentPlayer).booleanValue()) {
+                        state.calledColor = askColor();
                     } else {
-                        calledColor = chooseBotColor(hand);
+                        state.calledColor = chooseBotColor(hand);
                     }
-                    Display.playerCallsColor(name, calledColor);
+                    Display.playerCallsColor(name, state.calledColor);
                 }
 
                 if (hand.size() == 1) {
@@ -165,8 +155,8 @@ public class Main {
         String drawn = draw();
         hand.add(drawn);
         Display.playerDraws(name, drawn);
-        if (isLegal(drawn, upCard, calledColor)) {
-            if (!humanPlayers.get(currentPlayer).booleanValue()) {
+        if (isLegal(drawn, state.upCard, state.calledColor)) {
+            if (!state.humanPlayers.get(state.currentPlayer).booleanValue()) {
                 return hand.size() - 1;
             } else {
                 System.out.print("Play drawn card " + drawn + "? y/n: ");
@@ -180,60 +170,60 @@ public class Main {
     }
 
     static void dealHands() {
-        for (int i = 0; i < hands.size(); i++) {
-            hands.get(i).clear();
+        for (int i = 0; i < state.hands.size(); i++) {
+            state.hands.get(i).clear();
         }
-        for (int i = 0; i < playerNames.size(); i++) {
+        for (int i = 0; i < state.playerNames.size(); i++) {
             for (int j = 0; j < 7; j++) {
-                hands.get(i).add(draw());
+                state.hands.get(i).add(draw());
             }
         }
     }
 
     static void buildDeck() {
-        deck.clear();
+        state.deck.clear();
         String[] colors = {"R", "Y", "G", "B"};
         for (int c = 0; c < colors.length; c++) {
-            deck.add(colors[c] + "0");
+            state.deck.add(colors[c] + "0");
             for (int n = 1; n <= 9; n++) {
-                deck.add(colors[c] + n);
-                deck.add(colors[c] + n);
+                state.deck.add(colors[c] + n);
+                state.deck.add(colors[c] + n);
             }
-            deck.add(colors[c] + "S");
-            deck.add(colors[c] + "S");
-            deck.add(colors[c] + "R");
-            deck.add(colors[c] + "R");
-            deck.add(colors[c] + "+2");
-            deck.add(colors[c] + "+2");
+            state.deck.add(colors[c] + "S");
+            state.deck.add(colors[c] + "S");
+            state.deck.add(colors[c] + "R");
+            state.deck.add(colors[c] + "R");
+            state.deck.add(colors[c] + "+2");
+            state.deck.add(colors[c] + "+2");
         }
         for (int i = 0; i < 4; i++) {
-            deck.add("W");
-            deck.add("W4");
+            state.deck.add("W");
+            state.deck.add("W4");
         }
     }
 
     static String draw() {
-        if (deck.size() == 0) {
-            deck.addAll(discard);
-            discard.clear();
-            Collections.shuffle(deck, random);
+        if (state.deck.size() == 0) {
+            state.deck.addAll(state.discard);
+            state.discard.clear();
+            Collections.shuffle(state.deck, random);
         }
-        if (deck.size() == 0) {
+        if (state.deck.size() == 0) {
             return "W";
         }
-        return deck.remove(0);
+        return state.deck.remove(0);
     }
 
     static void scoreRound(String winnerName) {
         int points = 0;
-        for (int i = 0; i < hands.size(); i++) {
-            if (i != currentPlayer) {
-                for (int j = 0; j < hands.get(i).size(); j++) {
-                    points += points(hands.get(i).get(j));
+        for (int i = 0; i < state.hands.size(); i++) {
+            if (i != state.currentPlayer) {
+                for (int j = 0; j < state.hands.get(i).size(); j++) {
+                    points += points(state.hands.get(i).get(j));
                 }
             }
         }
-        scores[currentPlayer] += points;
+        state.scores[state.currentPlayer] += points;
         Display.winsRound(winnerName, points);
     }
 
@@ -242,8 +232,8 @@ public class Main {
             next();
             next();
         } else if (rank(card).equals("REVERSE")) {
-            direction = direction * -1;
-            if (playerNames.size() == 2) {
+            state.direction = state.direction * -1;
+            if (state.playerNames.size() == 2) {
                 next();
                 next();
             } else {
@@ -251,16 +241,16 @@ public class Main {
             }
         } else if (rank(card).equals("DRAW_TWO")) {
             next();
-            hands.get(currentPlayer).add(draw());
-            hands.get(currentPlayer).add(draw());
-            Display.drawsTwo(playerNames.get(currentPlayer));
+            state.hands.get(state.currentPlayer).add(draw());
+            state.hands.get(state.currentPlayer).add(draw());
+            Display.drawsTwo(state.playerNames.get(state.currentPlayer));
             next();
         } else if (rank(card).equals("WILD_DRAW_FOUR")) {
             next();
             for (int i = 0; i < 4; i++) {
-                hands.get(currentPlayer).add(draw());
+                state.hands.get(state.currentPlayer).add(draw());
             }
-            Display.drawsFour(playerNames.get(currentPlayer));
+            Display.drawsFour(state.playerNames.get(state.currentPlayer));
             next();
         } else {
             next();
@@ -269,17 +259,17 @@ public class Main {
 
     static int chooseBotCard(ArrayList<String> hand) {
         for (int i = 0; i < hand.size(); i++) {
-            if (rank(hand.get(i)).equals("DRAW_TWO") && isLegal(hand.get(i), upCard, calledColor)) {
+            if (rank(hand.get(i)).equals("DRAW_TWO") && isLegal(hand.get(i), state.upCard, state.calledColor)) {
                 return i;
             }
         }
         for (int i = 0; i < hand.size(); i++) {
-            if (rank(hand.get(i)).equals("SKIP") && isLegal(hand.get(i), upCard, calledColor)) {
+            if (rank(hand.get(i)).equals("SKIP") && isLegal(hand.get(i), state.upCard, state.calledColor)) {
                 return i;
             }
         }
         for (int i = 0; i < hand.size(); i++) {
-            if (rank(hand.get(i)).equals("NUMBER") && isLegal(hand.get(i), upCard, calledColor)) {
+            if (rank(hand.get(i)).equals("NUMBER") && isLegal(hand.get(i), state.upCard, state.calledColor)) {
                 return i;
             }
         }
@@ -315,7 +305,7 @@ public class Main {
                 System.out.println("Card not found.");
                 continue;
             }
-            if (!isLegal(hand.get(idx), upCard, calledColor)) {
+            if (!isLegal(hand.get(idx), state.upCard, state.calledColor)) {
                 System.out.println("That card is not legal.");
                 continue;
             }
@@ -327,48 +317,27 @@ public class Main {
         while (true) {
             System.out.print("Call color R/Y/G/B: ");
             String input = scanner.nextLine().trim().toUpperCase();
-            if (input.equals("R")) {
-                return "R";
-            }
-            if (input.equals("Y")) {
-                return "Y";
-            }
-            if (input.equals("G")) {
-                return "G";
-            }
-            if (input.equals("B")) {
-                return "B";
-            }
+            if (input.equals("R")) return "R";
+            if (input.equals("Y")) return "Y";
+            if (input.equals("G")) return "G";
+            if (input.equals("B")) return "B";
             System.out.println("Bad color.");
         }
     }
 
     static String chooseBotColor(ArrayList<String> hand) {
-        int r = 0;
-        int y = 0;
-        int g = 0;
-        int b = 0;
+        int r = 0, y = 0, g = 0, b = 0;
         for (int i = 0; i < hand.size(); i++) {
             String c = color(hand.get(i));
-            if (c.equals("R")) {
-                r++;
-            } else if (c.equals("Y")) {
-                y++;
-            } else if (c.equals("G")) {
-                g++;
-            } else if (c.equals("B")) {
-                b++;
-            }
+            if (c.equals("R")) r++;
+            else if (c.equals("Y")) y++;
+            else if (c.equals("G")) g++;
+            else if (c.equals("B")) b++;
         }
-        if (r >= y && r >= g && r >= b) {
-            return "R";
-        } else if (y >= r && y >= g && y >= b) {
-            return "Y";
-        } else if (g >= r && g >= y && g >= b) {
-            return "G";
-        } else {
-            return "B";
-        }
+        if (r >= y && r >= g && r >= b) return "R";
+        if (y >= r && y >= g && y >= b) return "Y";
+        if (g >= r && g >= y && g >= b) return "G";
+        return "B";
     }
 
     // these delegate to Card so the logic lives in one place
@@ -379,22 +348,16 @@ public class Main {
     static int    points(String card) { return new Card(card).points(); }
 
     static void next() {
-        currentPlayer += direction;
-        if (currentPlayer >= playerNames.size()) {
-            currentPlayer = 0;
-        }
-        if (currentPlayer < 0) {
-            currentPlayer = playerNames.size() - 1;
-        }
+        state.currentPlayer += state.direction;
+        if (state.currentPlayer >= state.playerNames.size()) state.currentPlayer = 0;
+        if (state.currentPlayer < 0) state.currentPlayer = state.playerNames.size() - 1;
     }
 
     static String join(ArrayList<String> cards) {
         String out = "";
         for (int i = 0; i < cards.size(); i++) {
             out += i + ":" + cards.get(i);
-            if (i < cards.size() - 1) {
-                out += " ";
-            }
+            if (i < cards.size() - 1) out += " ";
         }
         return out;
     }
@@ -409,15 +372,15 @@ public class Main {
         if (isLegal("B3", "W", "B")) passed++; else fail("called color");
         if (!isLegal("B3", "R9", "")) passed++; else fail("illegal mismatch");
 
-        ArrayList<String> h = new ArrayList<String>();
+        ArrayList<String> h = new ArrayList<>();
         h.add("B3");
         h.add("R4");
         h.add("W");
-        upCard = "R9";
-        calledColor = "";
+        state.upCard = "R9";
+        state.calledColor = "";
         if (chooseBotCard(h) == 1) passed++; else fail("bot normal before wild");
 
-        ArrayList<String> h2 = new ArrayList<String>();
+        ArrayList<String> h2 = new ArrayList<>();
         h2.add("B1");
         h2.add("B2");
         h2.add("R3");
