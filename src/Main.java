@@ -54,16 +54,11 @@ public class Main {
         }
 
         for (int g = 1; g <= games; g++) {
-            if (!quiet) {
-                System.out.println("\n=== Game " + g + " ===");
-            }
+            Display.gameStart(g);
             playGame();
         }
 
-        System.out.println("\nFinal scores:");
-        for (int i = 0; i < playerNames.size(); i++) {
-            System.out.println(playerNames.get(i) + ": " + scores[i]);
-        }
+        Display.finalScores(playerNames, scores);
     }
 
     static void setupPlayers(int bots, boolean human) {
@@ -102,10 +97,7 @@ public class Main {
             String name = playerNames.get(currentPlayer);
             ArrayList<String> hand = hands.get(currentPlayer);
 
-            if (!quiet) {
-                System.out.println("\nUp card: " + upCard + (calledColor.equals("") ? "" : " called " + calledColor));
-                System.out.println(name + " hand: " + join(hand));
-            }
+            Display.turnState(upCard, calledColor, name, hand);
 
             int chosen = -1;
             if (humanPlayers.get(currentPlayer).booleanValue()) {
@@ -120,9 +112,7 @@ public class Main {
 
             if (chosen >= 0) {
                 if (chosen >= hand.size()) {
-                    if (!quiet) {
-                        System.out.println(name + " selected an invalid index and draws a penalty card.");
-                    }
+                    Display.penaltyCard(name);
                     hand.add(draw());
                     next();
                     continue;
@@ -148,9 +138,7 @@ public class Main {
                 }
 
                 if (!ok) {
-                    if (!quiet) {
-                        System.out.println(name + " tried illegal card " + card + " and draws a penalty card.");
-                    }
+                    Display.illegalCard(name, card);
                     hand.add(draw());
                     next();
                     continue;
@@ -160,9 +148,7 @@ public class Main {
                 discard.add(upCard);
                 upCard = card;
                 calledColor = "";
-                if (!quiet) {
-                    System.out.println(name + " plays " + card);
-                }
+                Display.playerPlays(name, card);
 
                 if (card.equals("W") || card.equals("W4")) {
                     if (humanPlayers.get(currentPlayer).booleanValue()) {
@@ -170,13 +156,11 @@ public class Main {
                     } else {
                         calledColor = chooseBotColor(hand);
                     }
-                    if (!quiet) {
-                        System.out.println(name + " calls " + calledColor);
-                    }
+                    Display.playerCallsColor(name, calledColor);
                 }
 
-                if (hand.size() == 1 && !quiet) {
-                    System.out.println(name + " says UNO!");
+                if (hand.size() == 1) {
+                    Display.uno(name);
                 }
 
                 if (hand.size() == 0) {
@@ -189,9 +173,7 @@ public class Main {
                 next();
             }
         }
-        if (!quiet) {
-            System.out.println("Game stopped at safety limit.");
-        }
+        Display.safetyLimit();
     }
 
     // draws a card for the current player and returns the index to play it,
@@ -199,9 +181,7 @@ public class Main {
     static int handleDraw(ArrayList<String> hand, String name) {
         String drawn = draw();
         hand.add(drawn);
-        if (!quiet) {
-            System.out.println(name + " draws " + drawn);
-        }
+        Display.playerDraws(name, drawn);
         if (isLegal(drawn, upCard, calledColor)) {
             if (!humanPlayers.get(currentPlayer).booleanValue()) {
                 return hand.size() - 1;
@@ -271,12 +251,11 @@ public class Main {
             }
         }
         scores[currentPlayer] += points;
-        if (!quiet) {
-            System.out.println(winnerName + " wins and scores " + points);
-        }
+        Display.winsRound(winnerName, points);
     }
 
-    static void applyCardEffect(String card) {        if (rank(card).equals("SKIP")) {
+    static void applyCardEffect(String card) {
+        if (rank(card).equals("SKIP")) {
             next();
             next();
         } else if (rank(card).equals("REVERSE")) {
@@ -291,18 +270,14 @@ public class Main {
             next();
             hands.get(currentPlayer).add(draw());
             hands.get(currentPlayer).add(draw());
-            if (!quiet) {
-                System.out.println(playerNames.get(currentPlayer) + " draws two.");
-            }
+            Display.drawsTwo(playerNames.get(currentPlayer));
             next();
         } else if (rank(card).equals("WILD_DRAW_FOUR")) {
             next();
             for (int i = 0; i < 4; i++) {
                 hands.get(currentPlayer).add(draw());
             }
-            if (!quiet) {
-                System.out.println(playerNames.get(currentPlayer) + " draws four.");
-            }
+            Display.drawsFour(playerNames.get(currentPlayer));
             next();
         } else {
             next();
