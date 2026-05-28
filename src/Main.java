@@ -291,29 +291,35 @@ public class Main {
         return -1;
     }
 
+    // just parsing — no legality check here, returns -1 for draw, -2 if not understood
+    static int parseCardInput(String input, ArrayList<String> hand) {
+        if (input.equals("DRAW")) return -1;
+        try {
+            int index = Integer.parseInt(input);
+            if (index >= 0 && index < hand.size()) return index;
+        } catch (Exception ignored) {
+        }
+        for (int i = 0; i < hand.size(); i++) {
+            if (hand.get(i).equals(input)) return i;
+        }
+        return -2;
+    }
+
     static int askHuman(ArrayList<String> hand) {
         while (true) {
             System.out.print("Choose card index/code or draw: ");
             String input = scanner.nextLine().trim().toUpperCase();
-            if (input.equals("DRAW")) {
-                return -1;
+            int idx = parseCardInput(input, hand);
+            if (idx == -1) return -1;
+            if (idx == -2) {
+                System.out.println("Card not found.");
+                continue;
             }
-            try {
-                int index = Integer.parseInt(input);
-                if (index >= 0 && index < hand.size()) {
-                    return index;
-                }
-            } catch (Exception ignored) {
+            if (!isLegal(hand.get(idx), upCard, calledColor)) {
+                System.out.println("That card is not legal.");
+                continue;
             }
-            for (int i = 0; i < hand.size(); i++) {
-                if (hand.get(i).equals(input)) {
-                    if (isLegal(hand.get(i), upCard, calledColor)) {
-                        return i;
-                    }
-                    System.out.println("That card is not legal.");
-                }
-            }
-            System.out.println("Card not found.");
+            return idx;
         }
     }
 
