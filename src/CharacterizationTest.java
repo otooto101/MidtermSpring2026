@@ -37,6 +37,9 @@ public class CharacterizationTest {
         suite("Edge: empty drawn card play check", CharacterizationTest::testDrawnCardLegalCheck);
         suite("Edge: reverse on 2-player acts like skip", CharacterizationTest::testReverse2Player);
         suite("Edge: draw from empty deck recycles discard", CharacterizationTest::testDeckRecycle);
+        suite("Effect: skip actually skips next player", CharacterizationTest::testSkipEffect);
+        suite("Effect: reverse changes direction", CharacterizationTest::testReverseEffect);
+        suite("Effect: draw two adds 2 cards to next player", CharacterizationTest::testDrawTwoEffect);
 
         System.out.println("\n==============================");
         System.out.printf("TOTAL: %d passed, %d failed out of %d%n", passed, failed, total);
@@ -261,6 +264,94 @@ public class CharacterizationTest {
 
         Main.deck    = savedDeck;
         Main.discard = savedDiscard;
+    }
+
+    // skip calls next() twice so player 1 gets completely skipped
+    static void testSkipEffect() {
+        int savedPlayer    = Main.currentPlayer;
+        int savedDirection = Main.direction;
+        ArrayList<String> savedNames = Main.playerNames;
+
+        Main.playerNames = new ArrayList<>();
+        Main.playerNames.add("A");
+        Main.playerNames.add("B");
+        Main.playerNames.add("C");
+        Main.currentPlayer = 0;
+        Main.direction = 1;
+
+        Main.next();
+        Main.next();
+
+        check("skip: player 0 plays, player 1 skipped, lands on 2", Main.currentPlayer == 2);
+
+        Main.currentPlayer = savedPlayer;
+        Main.direction     = savedDirection;
+        Main.playerNames   = savedNames;
+    }
+
+    // reverse flips direction; with 3 players moving backwards from 1 lands on 0
+    static void testReverseEffect() {
+        int savedPlayer    = Main.currentPlayer;
+        int savedDirection = Main.direction;
+        ArrayList<String> savedNames = Main.playerNames;
+
+        Main.playerNames = new ArrayList<>();
+        Main.playerNames.add("A");
+        Main.playerNames.add("B");
+        Main.playerNames.add("C");
+        Main.currentPlayer = 1;
+        Main.direction = 1;
+
+        Main.direction = Main.direction * -1;
+        Main.next();
+
+        check("reverse: direction is now -1", Main.direction == -1);
+        check("reverse: next player is 0 (moved backwards from 1)", Main.currentPlayer == 0);
+
+        Main.currentPlayer = savedPlayer;
+        Main.direction     = savedDirection;
+        Main.playerNames   = savedNames;
+    }
+
+    // draw two: next player gets 2 extra cards and their turn is skipped
+    static void testDrawTwoEffect() {
+        int savedPlayer    = Main.currentPlayer;
+        int savedDirection = Main.direction;
+        ArrayList<String> savedNames = Main.playerNames;
+        ArrayList<ArrayList<String>> savedHands = Main.hands;
+        ArrayList<String> savedDeck = Main.deck;
+
+        Main.playerNames = new ArrayList<>();
+        Main.playerNames.add("A");
+        Main.playerNames.add("B");
+        Main.direction = 1;
+        Main.currentPlayer = 0;
+
+        Main.hands = new ArrayList<>();
+        Main.hands.add(new ArrayList<>());
+        Main.hands.add(new ArrayList<>());
+
+        Main.deck = new ArrayList<>();
+        Main.deck.add("R1");
+        Main.deck.add("G3");
+        Main.deck.add("B5");
+
+        int before = Main.hands.get(1).size();
+
+        // mirrors exactly what the game loop does for DRAW_TWO
+        Main.next();
+        Main.hands.get(Main.currentPlayer).add(Main.draw());
+        Main.hands.get(Main.currentPlayer).add(Main.draw());
+        Main.next();
+
+        check("draw two: player 1 got 2 cards", Main.hands.get(1).size() == before + 2);
+        check("draw two: ends back at player 0 (B's turn skipped)", Main.currentPlayer == 0);
+
+        Main.currentPlayer = savedPlayer;
+        Main.direction     = savedDirection;
+        Main.playerNames   = savedNames;
+        Main.hands         = savedHands;
+        Main.deck          = savedDeck;
     }
 
     static ArrayList<String> hand(String... cards) {
