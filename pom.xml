@@ -16,6 +16,21 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
+    <dependencies>
+        <!-- ORM: Hibernate 6 / Jakarta Persistence -->
+        <dependency>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-core</artifactId>
+            <version>6.5.2.Final</version>
+        </dependency>
+        <!-- Embedded database: H2 (file-based for game, in-memory for tests) -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>2.2.224</version>
+        </dependency>
+    </dependencies>
+
     <!--
         CharacterizationTest is hand-written plain Java (no JUnit).
         exec-maven-plugin runs it in the `test` phase so `mvn test` works
@@ -49,6 +64,17 @@
                         </goals>
                         <configuration>
                             <mainClass>CharacterizationTest</mainClass>
+                            <classpathScope>test</classpathScope>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>persistence-tests</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>PersistenceTest</mainClass>
                             <classpathScope>test</classpathScope>
                         </configuration>
                     </execution>

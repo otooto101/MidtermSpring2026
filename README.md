@@ -135,3 +135,37 @@ docker run --rm -it midterm-uno --bots 2 --games 5 --quiet
 
 Game events (start, player turns, cards played/drawn, invalid input, round end, game end) are logged via `java.util.logging` to **stderr**, keeping player-facing **stdout** output clean and readable for human players.
 
+---
+
+## Assignment 5 — Persistence (ORM + H2)
+
+Game results are persisted automatically after every session using **Hibernate 6 / JPA** and an embedded **H2** database (`uno-history.mv.db` in the working directory).
+
+No installation or setup is required — H2 is embedded and the schema is created automatically on first run.
+
+See [`docs/database.md`](docs/database.md) for full schema and usage details.
+
+### View game statistics
+
+```bash
+# after packaging:
+java -jar target/midterm-uno.jar --stats
+
+# via Maven exec:
+./mvnw exec:java -Dexec.mainClass=Main "-Dexec.args=--stats"
+.\mvnw.cmd exec:java -Dexec.mainClass=Main "-Dexec.args=--stats"
+```
+
+Displays three reports:
+- **Recent Games** — last 5 sessions (time, winner, rounds played)
+- **Player Win Counts** — wins per player, descending
+- **Highest Session Scores** — top 5 individual session totals
+
+### Run persistence tests
+
+```bash
+./mvnw test          # Linux/macOS  (runs CharacterizationTest + PersistenceTest)
+.\mvnw.cmd test      # Windows PowerShell
+```
+
+Persistence tests use an isolated **in-memory H2 database** — no manual setup needed.

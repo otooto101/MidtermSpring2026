@@ -1,1 +1,6 @@
 out/
+target/
+# H2 database files (created at runtime)
+uno-history.mv.db
+uno-history.trace.db
+

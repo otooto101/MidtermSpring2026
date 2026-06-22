@@ -8,10 +8,15 @@ public class Main {
     static boolean quiet = false;
     static Scanner scanner = new Scanner(System.in);
 
+    // persistence tracking — set per session/round
+    static GameSessionEntity currentSession = null;
+    static int currentRoundNumber = 0;
+
     public static void main(String[] args) {
         int bots = 3;
         int games = 1;
         boolean human = false;
+        boolean showStats = false;
         long seed = System.currentTimeMillis();
 
         for (int i = 0; i < args.length; i++) {
@@ -25,13 +30,25 @@ public class Main {
                 quiet = true;
             } else if (args[i].equals("--seed") && i + 1 < args.length) {
                 seed = Long.parseLong(args[++i]);
+            } else if (args[i].equals("--stats")) {
+                showStats = true;
             } else if (args[i].equals("--self-test")) {
                 selfTest();
                 return;
             } else if (args[i].equals("--help")) {
-                System.out.println("Usage: scripts/run.sh [--bots N] [--games N] [--human] [--quiet] [--seed N]");
+                System.out.println("Usage: scripts/run.sh [--bots N] [--games N] [--human] [--quiet] [--seed N] [--stats]");
                 return;
             }
+        }
+
+        // suppress verbose Hibernate startup noise so the CLI stays readable
+        java.util.logging.Logger.getLogger("org.hibernate").setLevel(java.util.logging.Level.WARNING);
+        PersistenceService.init("uno-pu");
+
+        if (showStats) {
+            PersistenceService.printStats();
+            PersistenceService.close();
+            return;
         }
 
         state.random = new Random(seed);
@@ -39,17 +56,23 @@ public class Main {
 
         if (state.players.size() < 2 || state.players.size() > 4) {
             System.out.println("UNO needs 2 to 4 players.");
+            PersistenceService.close();
             return;
         }
 
+        currentSession = PersistenceService.startSession(state.players);
+
         for (int g = 1; g <= games; g++) {
+            currentRoundNumber = g;
             Display.gameStart(g);
             GameLog.gameStart(g, state.players.size());
             playGame();
         }
 
+        PersistenceService.finishSession(currentSession, state.players, state.scores);
         Display.finalScores(state.players, state.scores);
         GameLog.gameEnd();
+        PersistenceService.close();
     }
 
     static void setupPlayers(int bots, boolean human) {
@@ -221,6 +244,9 @@ public class Main {
         state.scores[state.currentPlayer] += points;
         Display.winsRound(winnerName, points);
         GameLog.roundEnd(winnerName, points);
+        if (currentSession != null) {
+            PersistenceService.addRound(currentSession, currentRoundNumber, winnerName, points);
+        }
     }
 
     static void applyCardEffect(String card) {
