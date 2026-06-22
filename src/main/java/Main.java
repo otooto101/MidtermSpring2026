@@ -44,10 +44,12 @@ public class Main {
 
         for (int g = 1; g <= games; g++) {
             Display.gameStart(g);
+            GameLog.gameStart(g, state.players.size());
             playGame();
         }
 
         Display.finalScores(state.players, state.scores);
+        GameLog.gameEnd();
     }
 
     static void setupPlayers(int bots, boolean human) {
@@ -80,6 +82,7 @@ public class Main {
             Player current = state.players.get(state.currentPlayer);
 
             Display.turnState(state.upCard, state.calledColor, current.name, current.hand);
+            GameLog.playerTurn(current.name, state.upCard, state.calledColor);
 
             int chosen = -1;
             if (current.isHuman) {
@@ -114,6 +117,7 @@ public class Main {
                 state.upCard = card;
                 state.calledColor = "";
                 Display.playerPlays(current.name, card);
+                GameLog.cardPlayed(current.name, card);
 
                 if (card.equals("W") || card.equals("W4")) {
                     if (current.isHuman) {
@@ -147,6 +151,7 @@ public class Main {
         String drawn = draw();
         hand.add(drawn);
         Display.playerDraws(name, drawn);
+        GameLog.cardDrawn(name, drawn);
         if (isLegal(drawn, state.upCard, state.calledColor)) {
             if (!state.players.get(state.currentPlayer).isHuman) {
                 return hand.size() - 1;
@@ -215,6 +220,7 @@ public class Main {
         }
         state.scores[state.currentPlayer] += points;
         Display.winsRound(winnerName, points);
+        GameLog.roundEnd(winnerName, points);
     }
 
     static void applyCardEffect(String card) {
@@ -299,10 +305,12 @@ public class Main {
             if (idx == -1) return -1;
             if (idx == -2) {
                 System.out.println("Card not found.");
+                GameLog.invalidInput("You", "card-not-found:" + input);
                 continue;
             }
             if (!isLegal(hand.get(idx), state.upCard, state.calledColor)) {
                 System.out.println("That card is not legal.");
+                GameLog.invalidInput("You", "illegal-card:" + hand.get(idx));
                 continue;
             }
             return idx;

@@ -1,4 +1,4 @@
-# Midterm UNO CLI
+# Midterm UNO CLI (A4: Maven + Logging + Docker)
 
 This is a standalone CLI UNO-like game.
 
@@ -69,3 +69,69 @@ See `docs/rules.html` for the implemented game rules.
 * `docs/midterm-exam.md`: midterm brief
 * `docs/rubric.md`: grading rubric
 * `docs/refactoring-guide.md`: suggested refactoring path
+
+---
+
+## Assignment 4 — Build, Test, Run, Docker
+
+This project uses **Maven** (wrapper included — Maven does not need to be pre-installed).
+
+### Local build
+
+```bash
+./mvnw compile          # Linux / macOS / Git Bash
+.\mvnw.cmd compile      # Windows PowerShell
+```
+
+### Local test
+
+```bash
+./mvnw test
+.\mvnw.cmd test
+```
+
+Runs `CharacterizationTest` (the hand-written test harness) via `exec-maven-plugin` bound to the `test` phase — no manual classpath setup needed.
+
+### Local run
+
+```bash
+./mvnw exec:java -Dexec.mainClass=Main "-Dexec.args=--bots 3 --games 1"
+.\mvnw.cmd exec:java -Dexec.mainClass=Main "-Dexec.args=--bots 3 --games 1"
+```
+
+Or after packaging:
+
+```bash
+java -jar target/midterm-uno.jar --bots 3 --games 1
+```
+
+### Package (build runnable fat jar)
+
+```bash
+./mvnw package
+.\mvnw.cmd package
+# produces: target/midterm-uno.jar
+```
+
+### Docker build
+
+```bash
+docker build -t midterm-uno .
+```
+
+### Docker run
+
+```bash
+docker run --rm -it midterm-uno --bots 3 --games 1
+```
+
+Override the default arguments freely:
+
+```bash
+docker run --rm -it midterm-uno --bots 2 --games 5 --quiet
+```
+
+### Logging
+
+Game events (start, player turns, cards played/drawn, invalid input, round end, game end) are logged via `java.util.logging` to **stderr**, keeping player-facing **stdout** output clean and readable for human players.
+
