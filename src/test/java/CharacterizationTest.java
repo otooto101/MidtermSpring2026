@@ -46,6 +46,8 @@ public class CharacterizationTest {
         suite("UNO: no penalty when hand size != 1", CharacterizationTest::testUnoPenaltyIgnoredAboveOneCard);
         suite("Target score: detects when a player reaches it", CharacterizationTest::testHasReachedTarget);
         suite("Target score: picks highest-scoring player as winner", CharacterizationTest::testFinalWinnerName);
+        suite("Effect: reverse on 2 players ends turn where a skip would", CharacterizationTest::testReverseTwoPlayerFullFlow);
+        suite("Scoring: scoreRound awards opponents' card points to the winner", CharacterizationTest::testScoreRoundAwardsPoints);
 
         System.out.println("\n==============================");
         System.out.printf("TOTAL: %d passed, %d failed out of %d%n", passed, failed, total);
@@ -432,6 +434,42 @@ public class CharacterizationTest {
         Main.state.scores[0] = 300;
         Main.state.scores[1] = 520;
         check("Bob has the higher score and wins", Main.finalWinnerName().equals("Bob"));
+        Main.state = saved;
+    }
+
+    // with exactly 2 players, applyCardEffect's REVERSE case calls next() twice
+    // instead of once - net effect is the same as a skip (the reverser goes again)
+    static void testReverseTwoPlayerFullFlow() {
+        GameState saved = Main.state;
+        Main.state = new GameState();
+        Main.state.players.add(new Player("A", false));
+        Main.state.players.add(new Player("B", false));
+        Main.state.currentPlayer = 0;
+        Main.state.direction = 1;
+
+        // mirrors applyCardEffect's REVERSE case exactly, for a 2-player game
+        Main.state.direction = Main.state.direction * -1;
+        Main.next();
+        Main.next();
+
+        check("2-player reverse: direction flipped", Main.state.direction == -1);
+        check("2-player reverse: turn lands back on player 0 (B was skipped)", Main.state.currentPlayer == 0);
+        Main.state = saved;
+    }
+
+    // scoreRound() sums every other player's remaining hand value and credits the winner
+    static void testScoreRoundAwardsPoints() {
+        GameState saved = Main.state;
+        Main.state = new GameState();
+        Main.state.players.add(new Player("A", false));
+        Main.state.players.add(new Player("B", false));
+        Main.state.currentPlayer = 0; // A just emptied their hand and won the round
+        Main.state.players.get(1).hand.add("R5");  // 5 points
+        Main.state.players.get(1).hand.add("GS");  // 20 points
+
+        Main.scoreRound("A");
+
+        check("round winner is credited with opponents' total card points", Main.state.scores[0] == 25);
         Main.state = saved;
     }
 

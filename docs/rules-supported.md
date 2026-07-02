@@ -41,7 +41,9 @@ turn order. **Simplification:** for exactly 2 players, Reverse is treated identi
 to Skip (the same player is skipped) — this is the officially documented common
 variant and is called out explicitly in the rules reference as acceptable.
 
-Tested in `testReverseEffect` and `testReverse2Player`.
+Tested in `testReverseEffect`, `testReverse2Player`, and `testReverseTwoPlayerFullFlow`
+(the last one drives the exact 2-player `next()`/`next()` sequence and asserts the
+turn lands back on the same player, proving the skip-equivalent behavior end-to-end).
 
 ## Draw Two — Implemented
 
@@ -96,7 +98,9 @@ Tested in `testUnoPenaltyApplied`, `testUnoPenaltyNotAppliedWhenCalled`,
 
 - `scoreRound()` sums the point value of every card left in every other player's
   hand and awards it to the round winner (`Card.points()`: number = face value,
-  Skip/Reverse/Draw Two = 20, Wild/Wild Draw Four = 50).
+  Skip/Reverse/Draw Two = 20, Wild/Wild Draw Four = 50). Directly tested in
+  `testScoreRoundAwardsPoints`, which calls `Main.scoreRound()` against a
+  constructed `GameState` and asserts the winner's score total.
 - **Two supported game-length modes:**
   - `--games N` — play exactly N rounds, then stop and show final scores (original
     behavior, still supported for backward compatibility with earlier assignments).
@@ -116,4 +120,6 @@ end-to-end with `--target 150 --seed 42`.
 - Deterministic deck setup available via `--seed N` for reproducible test games.
 - Starting up-card: if a wild is drawn as the initial up card, it is discarded
   and redrawn until a non-wild card is found (documented in `playGame()`).
+
+
 

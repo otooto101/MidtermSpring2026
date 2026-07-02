@@ -70,13 +70,15 @@ objects directly and calls these methods, never touching `System.in`.
 
 ## What Tests Were Added
 
-`CharacterizationTest` (99 checks) covers, per the rubric's required areas:
+`CharacterizationTest` (102 checks) covers, per the rubric's required areas:
 
 - **card legality**: color/number/action/wild/called-color match and mismatch cases
-- **action cards**: Skip, Reverse (including 2-player variant), Draw Two effect tests
+- **action cards**: Skip, Reverse (including a full 2-player next()/next() flow
+  proving the skip-equivalent behavior), Draw Two effect tests
 - **wild cards**: Wild and Wild Draw Four legality and effect (4-card draw + skip)
 - **draw/pass flow**: drawn-card legality check, bot auto-play vs. human prompt path
-- **scoring**: number/action/wild point values
+- **scoring**: number/action/wild point values, plus `scoreRound()` itself
+  (asserts the round winner's score total after opponents' hands are summed)
 - **UNO call and penalty**: penalty applied when not called, not applied when
   called, not applied above 1 card
 - **game-over / target-score behavior**: `hasReachedTarget`, `finalWinnerName`
@@ -85,7 +87,7 @@ objects directly and calls these methods, never touching `System.in`.
 `PersistenceTest` (12 checks, separate from characterization tests) covers
 the JPA repository layer independently.
 
-All 111 tests pass via `mvn test`.
+All 114 tests pass via `mvn test`.
 
 ## What Limitations Remain
 
@@ -100,4 +102,5 @@ All 111 tests pass via `mvn test`.
 - The missed-UNO penalty is checked only at the start of the same player's
   own next turn, not the moment another player could "catch" them mid-turn —
   a simpler, documented timing rule rather than the most aggressive one.
+
 
