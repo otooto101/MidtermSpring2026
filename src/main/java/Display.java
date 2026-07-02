@@ -50,6 +50,18 @@ public class Display {
         if (!Main.quiet) System.out.println(playerName + " draws four.");
     }
 
+    static void missedUnoPenalty(String playerName) {
+        if (!Main.quiet) System.out.println(playerName + " forgot to call UNO and draws two penalty cards.");
+    }
+
+    static void targetReached(int target) {
+        if (!Main.quiet) System.out.println("\nTarget score of " + target + " reached!");
+    }
+
+    static void finalWinner(String playerName) {
+        System.out.println("Overall winner: " + playerName);
+    }
+
     static void safetyLimit() {
         if (!Main.quiet) System.out.println("Game stopped at safety limit.");
     }

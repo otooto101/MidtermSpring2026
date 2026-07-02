@@ -17,6 +17,7 @@ public class Main {
         int games = 1;
         boolean human = false;
         boolean showStats = false;
+        int targetScore = 0; // 0 = disabled; use --games count instead
         long seed = System.currentTimeMillis();
 
         for (int i = 0; i < args.length; i++) {
@@ -24,6 +25,8 @@ public class Main {
                 bots = Integer.parseInt(args[++i]);
             } else if (args[i].equals("--games") && i + 1 < args.length) {
                 games = Integer.parseInt(args[++i]);
+            } else if (args[i].equals("--target") && i + 1 < args.length) {
+                targetScore = Integer.parseInt(args[++i]);
             } else if (args[i].equals("--human")) {
                 human = true;
             } else if (args[i].equals("--quiet")) {
@@ -36,7 +39,7 @@ public class Main {
                 selfTest();
                 return;
             } else if (args[i].equals("--help")) {
-                System.out.println("Usage: scripts/run.sh [--bots N] [--games N] [--human] [--quiet] [--seed N] [--stats]");
+                System.out.println("Usage: scripts/run.sh [--bots N] [--games N] [--target N] [--human] [--quiet] [--seed N] [--stats]");
                 return;
             }
         }
@@ -62,17 +65,55 @@ public class Main {
 
         currentSession = PersistenceService.startSession(state.players);
 
-        for (int g = 1; g <= games; g++) {
-            currentRoundNumber = g;
-            Display.gameStart(g);
-            GameLog.gameStart(g, state.players.size());
-            playGame();
+        if (targetScore > 0) {
+            // multi-round game: keep playing rounds until someone reaches the target score
+            int g = 0;
+            int safety = 0;
+            while (!hasReachedTarget(targetScore) && safety < 10000) {
+                safety++;
+                g++;
+                currentRoundNumber = g;
+                Display.gameStart(g);
+                GameLog.gameStart(g, state.players.size());
+                playGame();
+            }
+            Display.targetReached(targetScore);
+            Display.finalScores(state.players, state.scores);
+            Display.finalWinner(finalWinnerName());
+        } else {
+            for (int g = 1; g <= games; g++) {
+                currentRoundNumber = g;
+                Display.gameStart(g);
+                GameLog.gameStart(g, state.players.size());
+                playGame();
+            }
+            Display.finalScores(state.players, state.scores);
         }
 
         PersistenceService.finishSession(currentSession, state.players, state.scores);
-        Display.finalScores(state.players, state.scores);
         GameLog.gameEnd();
         PersistenceService.close();
+    }
+
+    // true when at least one player has reached (or passed) the target score
+    static boolean hasReachedTarget(int target) {
+        for (int s : state.scores) {
+            if (s >= target) return true;
+        }
+        return false;
+    }
+
+    // player with the highest score; ties resolve to the first player found with that score
+    static String finalWinnerName() {
+        int bestIndex = -1;
+        int bestScore = Integer.MIN_VALUE;
+        for (int i = 0; i < state.players.size(); i++) {
+            if (state.scores[i] > bestScore) {
+                bestScore = state.scores[i];
+                bestIndex = i;
+            }
+        }
+        return bestIndex >= 0 ? state.players.get(bestIndex).name : "";
     }
 
     static void setupPlayers(int bots, boolean human) {
@@ -103,6 +144,7 @@ public class Main {
         while (guard < 3000) {
             guard++;
             Player current = state.players.get(state.currentPlayer);
+            checkUnoPenalty(current);
 
             Display.turnState(state.upCard, state.calledColor, current.name, current.hand);
             GameLog.playerTurn(current.name, state.upCard, state.calledColor);
@@ -153,6 +195,11 @@ public class Main {
 
                 if (current.hand.size() == 1) {
                     Display.uno(current.name);
+                    if (current.isHuman) {
+                        current.saidUno = askUnoCall();
+                    } else {
+                        current.saidUno = true; // bots always call it (documented simplification)
+                    }
                 }
 
                 if (current.hand.size() == 0) {
@@ -192,6 +239,7 @@ public class Main {
     static void dealHands() {
         for (int i = 0; i < state.players.size(); i++) {
             state.players.get(i).hand.clear();
+            state.players.get(i).saidUno = false;
             for (int j = 0; j < 7; j++) {
                 state.players.get(i).hand.add(draw());
             }
@@ -230,6 +278,24 @@ public class Main {
             return "W";
         }
         return state.deck.remove(0);
+    }
+
+    // checks if the player is sitting at 1 card without having called UNO,
+    // and applies the missed-call penalty (draw 2) at the start of their turn
+    static void checkUnoPenalty(Player p) {
+        if (p.hand.size() == 1 && !p.saidUno) {
+            p.hand.add(draw());
+            p.hand.add(draw());
+            Display.missedUnoPenalty(p.name);
+            GameLog.unoPenalty(p.name);
+            p.saidUno = false;
+        }
+    }
+
+    static boolean askUnoCall() {
+        System.out.print("Call UNO? y/n: ");
+        String input = scanner.nextLine().trim();
+        return input.equalsIgnoreCase("y") || input.equalsIgnoreCase("yes") || input.equalsIgnoreCase("uno");
     }
 
     static void scoreRound(String winnerName) {

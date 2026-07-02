@@ -40,6 +40,12 @@ public class CharacterizationTest {
         suite("Effect: skip actually skips next player", CharacterizationTest::testSkipEffect);
         suite("Effect: reverse changes direction", CharacterizationTest::testReverseEffect);
         suite("Effect: draw two adds 2 cards to next player", CharacterizationTest::testDrawTwoEffect);
+        suite("Effect: wild draw four adds 4 cards and skips", CharacterizationTest::testWildDrawFourEffect);
+        suite("UNO: penalty applied when not called", CharacterizationTest::testUnoPenaltyApplied);
+        suite("UNO: no penalty when called", CharacterizationTest::testUnoPenaltyNotAppliedWhenCalled);
+        suite("UNO: no penalty when hand size != 1", CharacterizationTest::testUnoPenaltyIgnoredAboveOneCard);
+        suite("Target score: detects when a player reaches it", CharacterizationTest::testHasReachedTarget);
+        suite("Target score: picks highest-scoring player as winner", CharacterizationTest::testFinalWinnerName);
 
         System.out.println("\n==============================");
         System.out.printf("TOTAL: %d passed, %d failed out of %d%n", passed, failed, total);
@@ -332,6 +338,100 @@ public class CharacterizationTest {
 
         check("draw two: player 1 got 2 cards", Main.state.players.get(1).hand.size() == before + 2);
         check("draw two: ends back at player 0 (B's turn skipped)", Main.state.currentPlayer == 0);
+        Main.state = saved;
+    }
+
+    // wild draw four: next player gets 4 extra cards and their turn is skipped
+    static void testWildDrawFourEffect() {
+        GameState saved = Main.state;
+        Main.state = new GameState();
+        Main.state.players.add(new Player("A", false));
+        Main.state.players.add(new Player("B", false));
+        Main.state.direction = 1;
+        Main.state.currentPlayer = 0;
+        for (int i = 0; i < 6; i++) Main.state.deck.add("R" + (i + 1));
+
+        int before = Main.state.players.get(1).hand.size();
+
+        // mirrors exactly what the game loop does for WILD_DRAW_FOUR
+        Main.next();
+        for (int i = 0; i < 4; i++) {
+            Main.state.players.get(Main.state.currentPlayer).hand.add(Main.draw());
+        }
+        Main.next();
+
+        check("wild draw four: player 1 got 4 cards", Main.state.players.get(1).hand.size() == before + 4);
+        check("wild draw four: ends back at player 0 (B's turn skipped)", Main.state.currentPlayer == 0);
+        Main.state = saved;
+    }
+
+    // if a player is at 1 card and never called UNO, the penalty kicks in at their next turn
+    static void testUnoPenaltyApplied() {
+        GameState saved = Main.state;
+        Main.state = new GameState();
+        Player p = new Player("A", false);
+        p.hand.add("R5");
+        p.saidUno = false;
+        Main.state.deck.add("G1");
+        Main.state.deck.add("G2");
+
+        Main.checkUnoPenalty(p);
+        check("missed UNO adds 2 penalty cards", p.hand.size() == 3);
+        Main.state = saved;
+    }
+
+    // calling UNO before the next turn avoids the penalty entirely
+    static void testUnoPenaltyNotAppliedWhenCalled() {
+        GameState saved = Main.state;
+        Main.state = new GameState();
+        Player p = new Player("A", false);
+        p.hand.add("R5");
+        p.saidUno = true;
+        Main.state.deck.add("G1");
+        Main.state.deck.add("G2");
+
+        Main.checkUnoPenalty(p);
+        check("called UNO means no penalty cards added", p.hand.size() == 1);
+        Main.state = saved;
+    }
+
+    // the penalty only applies to players sitting at exactly 1 card
+    static void testUnoPenaltyIgnoredAboveOneCard() {
+        GameState saved = Main.state;
+        Main.state = new GameState();
+        Player p = new Player("A", false);
+        p.hand.add("R5");
+        p.hand.add("R6");
+        p.saidUno = false;
+        Main.state.deck.add("G1");
+        Main.state.deck.add("G2");
+
+        Main.checkUnoPenalty(p);
+        check("no penalty when hand size is not 1", p.hand.size() == 2);
+        Main.state = saved;
+    }
+
+    // multi-round game keeps going until someone's score crosses the target
+    static void testHasReachedTarget() {
+        GameState saved = Main.state;
+        Main.state = new GameState();
+        Main.state.scores[0] = 120;
+        Main.state.scores[1] = 480;
+        check("nobody reached 500 yet", !Main.hasReachedTarget(500));
+        Main.state.scores[1] = 500;
+        check("player 1 reached 500", Main.hasReachedTarget(500));
+        Main.state = saved;
+    }
+
+    // once the target is hit, the highest total score determines the overall winner
+    static void testFinalWinnerName() {
+        GameState saved = Main.state;
+        Main.state = new GameState();
+        Main.state.players.add(new Player("Alice", false));
+        Main.state.players.add(new Player("Bob", false));
+        Main.state.scores[0] = 300;
+        Main.state.scores[1] = 520;
+        check("Bob has the higher score and wins", Main.finalWinnerName().equals("Bob"));
         Main.state = saved;
     }
 

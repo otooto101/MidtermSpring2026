@@ -32,6 +32,10 @@ public final class GameLog {
         LOG.info(() -> "ROUND_END winner=" + winner + " points=" + points);
     }
 
+    public static void unoPenalty(String name) {
+        LOG.warning(() -> "UNO_PENALTY player=" + name);
+    }
+
     public static void gameEnd() {
         LOG.info("GAME_END");
     }

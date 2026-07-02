@@ -169,3 +169,48 @@ Displays three reports:
 ```
 
 Persistence tests use an isolated **in-memory H2 database** — no manual setup needed.
+
+---
+
+## Final Project — Fuller UNO Rules
+
+This builds on the midterm/A4/A5 work with the remaining UNO rule features:
+**UNO call + missed-call penalty** and **multi-round play to a target score**.
+
+See [`docs/rules-supported.md`](docs/rules-supported.md) for the full rule-by-rule
+breakdown (what's implemented vs. simplified) and [`docs/final-report.md`](docs/final-report.md)
+for the architecture/testing summary.
+
+### New CLI flags
+
+```
+--target N   play rounds continuously until a player's cumulative score
+             reaches N, then print final scores and the overall winner
+             (overrides --games when provided)
+```
+
+Example — play until someone reaches 150 points:
+
+```bash
+java -jar target/midterm-uno.jar --bots 3 --target 150 --quiet --seed 42
+.\mvnw.cmd exec:java -Dexec.mainClass=Main "-Dexec.args=--bots 3 --target 150 --quiet"
+```
+
+### UNO call
+
+When any player (human or bot) is left with exactly one card, they're prompted
+to (or, for bots, automatically) call UNO. A human is asked `Call UNO? y/n:`.
+If a human forgets, a 2-card penalty is applied automatically at the start of
+their next turn.
+
+### Running the full test suite
+
+```bash
+./mvnw test
+.\mvnw.cmd test
+```
+
+Runs 99 characterization checks (rules, effects, UNO penalty, target-score
+logic) plus 12 persistence checks — 111 total, all passing.
+
+
